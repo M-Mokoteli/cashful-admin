@@ -80,11 +80,12 @@ export default function AccountDetailModal({ info, show, setShow }: iModal) {
                             <UserBasicInfo title1='Account Holder' value1={pay.bankDetail?.hodlerName!} title2='Account Number' value2={pay.bankDetail?.accountNumber!} />
                             <UserBasicInfo title1='Account Type' value1={pay.bankDetail?.accountType!} title2='Bank' value2={pay.bankDetail?.bankName!} />
                             <UserBasicInfo title1='Branch Code' value1={pay.bankDetail?.bankCode!} title2='' value2={''} />
-
                         </> : <>
                             <UserBasicInfo title1='Account Holder' value1={pay.mtnDetail?.fullName!} title2='Account Number' value2={pay.mtnDetail?.accountNumber!} />
                         </>
                     }
+
+                    <UserBasicInfo title1='Reference' value1={pay?.reference_number!} title2='' value2={''} />
                 </div>
             </div>
         </Modal>

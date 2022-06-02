@@ -90,11 +90,14 @@ export interface iPaymentInfos {
     bankCode: string;
     bankName: string;
     hodlerName: string;
+    reference_number?: string
   };
   mtnDetail?: {
     accountNumber: string;
     fullName: string;
   };
+
+  reference_number?: string
 }
 
 export interface iBackgroundInfo {

@@ -190,11 +190,13 @@ export default function Accounts() {
                     <AccountList searching={searching} pendingList={pendingList} reviewedList={approvedList} setInfo={setInfo} />
 
 
-                    {searching == false && lastID !== undefined && <div className='my-4 flex justify-center'>
-                        <Button onClick={() => {
-                            loadNext()
-                        }}>View More</Button>
-                    </div>}
+                    {searching == false && lastID !== undefined &&
+                        <div className='my-4 flex justify-center'>
+                            <Button onClick={() => {
+                                loadNext()
+                            }}>Next</Button>
+                        </div>
+                    }
                 </div>
                 <div className='col-span-1'>
                     {/* {
