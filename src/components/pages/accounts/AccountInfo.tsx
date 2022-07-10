@@ -35,9 +35,9 @@ export default function AccountInfo({ info, setInfo }: iAccountInfo) {
             <Spacing />
             <Title text='User documents' />
             <Spacing />
-            <DocBox id={info.id} url={info.doc.bankStatement.url} status={info.doc.bankStatement.status} infoKey="bankStatement" isPdf={true} />
-            <DocBox id={info.id} url={info.doc.idCard.url} status={info.doc.idCard.status} infoKey="idCard" />
-            <DocBox id={info.id} url={info.doc.proofOfAddress.url} status={info.doc.proofOfAddress.status} infoKey="proofOfAddress" />
+            <DocBox id={info?.id || ""} url={info?.doc?.bankStatement?.url || ""} status={info?.doc?.bankStatement?.status || ""} infoKey="bankStatement" isPdf={true} />
+            <DocBox id={info?.id || ""} url={info?.doc?.idCard?.url || ""} status={info?.doc?.idCard?.status || ""} infoKey="idCard" />
+            <DocBox id={info?.id || ""} url={info?.doc?.proofOfAddress?.url || ""} status={info?.doc?.proofOfAddress?.status} infoKey="proofOfAddress" />
         </MyCard>
     )
 }
