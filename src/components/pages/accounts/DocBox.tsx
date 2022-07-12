@@ -14,7 +14,7 @@ interface iDocBox {
 }
 export default function DocBox({ id, status, url, infoKey, isPdf = false }: iDocBox) {
 
-    const onUpdateStatus = async (_status: "pending" | "approved") => {
+    const onUpdateStatus = async (_status: "rejected" | "approved") => {
         //send to upcoming..
         const yes = confirm("Are you sure you want to change the status to " + _status + "?")
         if (yes === true) {
