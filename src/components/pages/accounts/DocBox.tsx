@@ -35,7 +35,7 @@ export default function DocBox({ id, status, url, infoKey, isPdf = false }: iDoc
             </div>
             <div className='flex flex-col gap-2'>
                 <Button onClick={() => { onUpdateStatus("approved") }}>Approve</Button>
-                <Button seconday onClick={() => { onUpdateStatus("pending") }}>Reject</Button>
+                <Button seconday onClick={() => { onUpdateStatus("rejected") }}>Reject</Button>
                 <p className='text-sm text-gray-700'><b>Status</b>: {status}</p>
             </div>
         </div>
