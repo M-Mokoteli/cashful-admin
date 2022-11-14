@@ -129,6 +129,9 @@ const AdminHome = () => {
           <div>
             <strong>Details: </strong> {item?.loanDetail}
           </div>
+          <div>
+            <strong>Type: </strong> {item?.loanType}
+          </div>
         </>
       </Modal>
     </Main>
