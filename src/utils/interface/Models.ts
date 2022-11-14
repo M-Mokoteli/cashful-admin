@@ -18,6 +18,8 @@ export class LoanRequest {
 
   loanStatus: string;
   loanDetail: any;
+  loanType: any;
+  
 
   constructor(obj: Partial<LoanRequest>) {
     this.id = obj.id!;
