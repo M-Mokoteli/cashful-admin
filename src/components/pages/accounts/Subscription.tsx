@@ -12,7 +12,7 @@ import Spacing from '../../layout/form/Spacing'
 import Title from '../../layout/form/Title'
 import { BsFillBackspaceFill } from 'react-icons/bs'
 import AccountInfo from './AccountInfo'
-import AccountList from './AccountList'
+import SubscriptionList from './SubscriptionList'
 
 export interface iUserInfo {
     id: string,
@@ -26,7 +26,7 @@ export interface iUserInfo {
 }
 
 // Page
-export default function Accounts() {
+export default function Subscription() {
     const [info, setInfo] = useState<iUserInfo>({} as iUserInfo)
 
     const [pendingList, setPendingList] = useState<iUserInfo[]>([])
@@ -168,14 +168,14 @@ export default function Accounts() {
 
     return (
         <Main title='Accounts'>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <div className='col-span-1'>
                     <div className='flex flex-col md:flex-row gap-2 justify-between items-center'>
-                        <Title text='Overview' />
+                        <Title text='Subscription' />
                         <div className='flex justify-end items-center gap-2'>
                             <input
                                 onKeyUp={doSearch}
-                                value={search} onChange={(e) => { setSearch(e.target.value) }} type="text" className='px-5 py-1 border border-gray-400 rounded-full' placeholder='Search Users' />
+                                value={search} onChange={(e) => { setSearch(e.target.value) }} type="text" className='px-5 py-1 border border-gray-400 rounded-full' placeholder='Search' />
                             {searching && <BsFillBackspaceFill className='text-3xl cursor-pointer' onClick={() => {
                                 setSearch("")
                                 setSearching(false)
@@ -186,7 +186,7 @@ export default function Accounts() {
                     <Spacing />
                     <Spacing />
                     <Spacing />
-                    <AccountList searching={searching} pendingList={pendingList} reviewedList={approvedList} setInfo={setInfo} />
+                    <SubscriptionList searching={searching} pendingList={pendingList} reviewedList={approvedList} setInfo={setInfo} />
 
 
                     {searching == false && lastID !== undefined &&

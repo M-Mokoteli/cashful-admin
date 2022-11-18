@@ -6,6 +6,7 @@ enum URL {
     PAY_INFO = "/pay-info",
     BANK = "/bank-info",
     MTN = "/mtn-info",
+    SUBSCRIPTION="/subscription",
 }
 
 export default URL
