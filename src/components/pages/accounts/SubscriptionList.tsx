@@ -1,10 +1,17 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import MyCard from '../../layout/common/MyCard'
 import Spacing from '../../layout/form/Spacing'
 import Table from '../../layout/form/Table'
 import Title from '../../layout/form/Title'
 import { iUserInfo } from './Accounts'
 import { Modal, Button } from "@milon27/react-modal";
+import { LoanRequest, STATUS } from '../../../utils/interface/Models'
+import { StateContext } from '../../../utils/context/MainContext'
+import { initLoadData, onUpdateLevel, paginateNext, paginatePrev, URHpopulateData } from '../home/HomeUtils'
+import { QuerySnapshot, where } from 'firebase/firestore'
+import Define from '../../../utils/Define'
+import MySelect from '../../layout/form/MySelect'
+import FbPaginate from '../../layout/common/FbPaginate'
 
 interface iAccountList {
     searching: boolean
@@ -12,30 +19,62 @@ interface iAccountList {
     reviewedList: iUserInfo[]
     setInfo: React.Dispatch<React.SetStateAction<iUserInfo>>
 }
-var data = [
-    { "Load": "asdadada",
-    "First": "Jill Dupre",
-    "Last": "Jill Duprse",
-    "Term": "rt",
-    "Account":"yh",
-    "Intrest":"xc",
-    "Total":"2022",
-    }];
+// var data = [
+//     { "Load": "asdadada",
+//     "First": "Jill Dupre",
+//     "Last": "Jill Duprse",
+//     "Term": "rt",
+//     "Account":"yh",
+//     "Intrest":"xc",
+//     "Total":"2022",
+//     }];
 
 
 export default function SubscriptionList({ searching = false, pendingList = [], setInfo, reviewedList = [] }: iAccountList) {
-    const [show, setShowa] = useState(data);
+    const [requests, setRequests] = useState<LoanRequest[]>([]);
+  const { levels } = useContext(StateContext);
+  const [page, setPage] = useState(0);
     const [showContent, setShowContent] = useState(true)
     const [showDetails, setShowDetails] = useState(false);
     const [item, setItem] = useState(null as any);
     const onDetailsClick =(item: any)=>{
-      console.log(item);
+    //   console.log(item);
       setItem(item);
     setShowDetails(true);
     }
-    useEffect(() => {
-        console.log(show);
-      }, []);
+      useEffect(() => {
+        // console.log(setRequests(requests))
+        if (levels.length > 0)
+          initLoadData(
+            setPage,
+            populateData,
+            where("loanStatus", "==", STATUS.pending)
+          );
+      }, [levels.length]);
+
+//next
+const next = async () => {
+    paginateNext(
+      setPage,
+      populateData,
+      requests,
+      where("loanStatus", "==", STATUS.pending)
+    );
+  };
+  //prev
+  const prev = async () => {
+    paginatePrev(
+      setPage,
+      populateData,
+      requests,
+      where("loanStatus", "==", STATUS.pending)
+    );
+  };
+
+  const populateData = async (data: QuerySnapshot<LoanRequest>) => {
+    URHpopulateData(data, levels, setRequests);
+  };
+
     return (
         <MyCard>
             <div className='Subsmain'>
@@ -45,15 +84,18 @@ export default function SubscriptionList({ searching = false, pendingList = [], 
                     noShadow={true}
                     header="Load Date,First Name,Last Name,Term,Account,Intrest,Total Repayble, Action"
                     items={[
-                        ...show.map((item, i) => {
+                        ...requests.map((item, i) => {
+                            // console.log(item);
                           return {
-                            Load: item?.Load,
-                            First: item?.First,
-                            Last: item?.Last,
-                            Term: item?.Term,
-                            Account: item?.Account,
-                            Intrest: item?.Intrest,
-                            Total: item?.Total,
+                            date: item?.loanDate.split(" ")[0],
+                            fname: item?.firstName,
+                            lname: item?.lastName,
+                            // level: item?.level,
+                            
+                            term: item.paymentTime + "days",
+                            amount: Define.CURRENCY + item.loanAmount,
+                            interest: item.interest,
+                            total: Define.CURRENCY + item.totalRepayable,
                             Action:(
                                 <Button
                                     onClick={() => {
@@ -61,19 +103,28 @@ export default function SubscriptionList({ searching = false, pendingList = [], 
                                     } } title="Get Auth"                                />
                                 
                               ),
-
-                          };}),
-                        ]}
-                    hideOption={true}
+                          };
+                        }),
+                      ]}
+                      hideOption={true}
                 />
+                 <Spacing />
+      {/* paginate here */}
+      <FbPaginate
+        page={page}
+        setPage={setPage}
+        current_length={requests.length}
+        next={next}
+        prev={prev}
+      />
             </div>
             <Spacing />
             <Spacing />
             <div className='modeName'>
             
-            <Modal   title={'Moses Kenwood'} onClose={() => {
+            <Modal   title={item?.firstName+''+item?.lastName} onClose={() => {
         setShowContent(false)
-        console.log("closing the modal");
+        // console.log("closing the modal");
       }} show={showDetails}
         setShow={setShowDetails} 
             footer={
@@ -88,25 +139,25 @@ export default function SubscriptionList({ searching = false, pendingList = [], 
                    
                    <h6 className='fontSizes'> Outstanding Amount</h6>
                    <div className='flex justify-between items-center gap-2 circleData'>
-                       <input value="RS 400.00"/>
+                       <input value={item?.totalRepayable}/>
                         </div>
                         <Button  onClick={() => setShowDetails(false)} title="Submit" />
                         <p className="paraM">Loan Date</p>
-                        <h5 className='headingData'>4 April 2022</h5>
+                        <h5 className='headingData'>{item?.loanDate.split(" ")[0]}</h5>
                         </div>
                         <div className='col-span-1 border rounded-md p-4'>
                    
                         <h6 className='fontSizes'>Next Instalment</h6>
                         <div className='flex justify-between items-center gap-2 circleDataTwo'>
-                        RS 400.00
+                        {item?.loanAmount}
                         </div>
                         <p className="paraM">Next Instalment Date</p>
-                        <h5 className='headingData'>4 April 2022</h5>
+                        <h5 className='headingData'>{item?.loanDate.split(" ")[0]}</h5>
                        
                         </div>
                         <div className='col-span-1 border rounded-md p-4'>
                    
-                        <p className="paraM paraMs">status: true<br></br>
+                        <p className="paraM paraMs">status: {item?.loanStatus}<br></br>
 message: Bin resolved<br></br>
 
 bin: 539983<br></br>
@@ -128,8 +179,9 @@ linked bank id: 9</p>
                         <div className='col-span-1 border rounded-md'>
                             <h5 className='headingData'>Repayment Schedule</h5>
                             <table width="100%" className='tableData'>
-                                <tr><th>Due Date</th><th>Amount Due</th><th>Amount Due</th></tr>
-                            <tr><td>4 April 2022</td><td>4 April 2022</td><td>4 April 2022</td></tr>
+                                <tr><th>Due Date</th><th>Amount Due</th><th>Status</th></tr>
+                            <tr><td>{item?.loanDate.split(" ")[0]}</td><td>{item?.loanAmount}</td>
+                            <td>{item?.loanStatus}</td></tr>
                             </table>
                             </div>
 

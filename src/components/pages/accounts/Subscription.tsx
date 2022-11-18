@@ -201,7 +201,7 @@ export default function Subscription() {
                     {/* {
                         JSON.stringify(info.id)
                     } */}
-                    <AccountInfo info={info} setInfo={setInfo} id={''} status={''} url={''} infoKey={''} />
+                    
                 </div>
             </div>
         </Main>

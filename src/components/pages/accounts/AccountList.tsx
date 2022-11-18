@@ -25,6 +25,7 @@ export default function AccountList({ searching = false, pendingList = [], setIn
                     header="First Name,Last Name,Account Status,View"
                     items={[
                         ...pendingList.map(item => {
+                            console.log("hello",item);
                             return {
                                 fname: item.firstName + "",
                                 lname: item.lastName,
