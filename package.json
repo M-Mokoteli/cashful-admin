@@ -11,11 +11,14 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "-": "^0.0.1",
     "@milon27/react-modal": "1.2.4",
     "@milon27/react-sidebar": "4.5.1",
     "axios": "0.26.1",
     "date-fns": "2.28.0",
     "firebase": "^9.8.0",
+    "g": "^2.0.1",
+    "pnpm": "^7.16.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-hook-form": "7.30.0",
