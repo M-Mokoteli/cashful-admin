@@ -1,6 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
 
 
 .si>button {
@@ -224,4 +228,62 @@ line-height: 19px;
   .Subsmain button:hover{
     /* background-color: rgb(54 162 218 / var(--tw-bg-opacity));
     color: #ffffff; */
+  }
+
+  .modeName > div{
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .modeName > div > div{
+    width: 1050px;
+  }
+  .modeName .closebtn{
+    position: absolute;
+    right: 30px;
+    top: 40px;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  .modeName .grid{
+    margin: 0 0 30px 0 !important;
+    text-align: center;
+  }
+  .modeName .grid > .border{
+    border-color: #000000;
+  }
+  .modeName .rm-p-6{
+    padding: 30px;
+  }
+  .modeName .grid > div{
+    padding: 30px;
+  }
+  .modeName .grid > div.col-span-1:nth-child(2){
+    padding-top: 60px;
+  }
+  .modeName h3{
+    margin: 20px auto !important;
+  }
+  .modeName .grid > div button{
+    margin: 10px auto;
+  }
+  .modeName .circleDataMain h6{
+    margin: 20px 0 0 0;
+  }
+  .modeName .circleDataMain .circleData{
+    width: 75%;
+    margin: 10px auto 0;
+  }
+  .modeName .circleDataTwo{
+    font-size: 25px;
+  }
+  .modeName .grid.fullwidt{
+    margin: 0 100px !important;
+  }
+  .modeName .grid.fullwidt h5{
+    font-size: 20px;
+    padding: 0 0 15px 0;
+  }
+  .modeName .grid.fullwidt th{
+    width: 33.33% !important;
   }
