@@ -32,28 +32,4 @@ export default function DocBox({ id, status, url, infoKey, isPdf = false }: iDoc
         }
     }
 
-    return (
-        <div className='flex gap-8 justify-start items-center mb-8'>
-            <div className='p-2 bg-gray-200 rounded-md'>
-                {isPdf ? <img onClick={() => {
-                    window.open(url, '_blank');
-                }} src={'https://cdn1.iconfinder.com/data/icons/hawcons/32/699581-icon-70-document-file-pdf-256.png'} alt="" width={120} height={120} className='object-cover rounded-md cursor-pointer' /> : <img src={url} alt="" width={120} height={120} className='object-cover rounded-md' />}
-            </div>
-            <div className='flex flex-col gap-2'>
-                <Button onClick={() => { onUpdateStatus("approved") }}>Approve</Button>
-                <Button seconday onClick={() => { onUpdateStatus("rejected") }}>Reject</Button>
-                <label className="containers">
-  <input type="radio"  name="radio"/>
-  <span className="checkmark"></span>
-</label>
-<label className="containers secondConst">
-  <input type="radio"  name="radio"/>
-  <span className="checkmark"></span>
-</label>
-                <p className='text-sm text-gray-700'><b>Status</b>: {status}</p>
-            </div>
-           
-        </div>
-        
-    )
 }
