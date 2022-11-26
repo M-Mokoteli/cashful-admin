@@ -3,7 +3,10 @@ import MainContext from './utils/context/MainContext';
 import Router from './components/router/Router';
 import AppWrapper from './components/layout/AppWrapper';
 
+
+
 // API Config
+
 // axios.defaults.baseURL = import.meta.env.VITE_APP_API + ''
 // axios.defaults.withCredentials = true
 
