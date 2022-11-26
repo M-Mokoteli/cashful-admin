@@ -14,6 +14,7 @@ import { BsFillBackspaceFill } from 'react-icons/bs'
 import AccountInfo from './AccountInfo'
 import SubscriptionList from './SubscriptionList'
 
+
 export interface iUserInfo {
     id: string,
     firstName?: string,
@@ -132,22 +133,33 @@ export default function Subscription() {
 
 
     // show that on approve list
-    const doSearch = async (event: { key: string }) => {
-        if (event.key === 'Enter') {
+    const doSearch = async () => {
+        
+        // if(event.key !== 'Enter' && event.key !== 'Backspace' && event.key !== 'Shift'){
+           
+        //     console.log(search);
+        // }
+
+       // if (event.key === 'Enter') {
            
          
         if (search.length == 0) {
             return;
         }
+        
         // get user by user firstname
+        
         const userColRef = createCollection<User>(Collections.USER)
-        const usersData = await getDocs(query<User>(userColRef, where("firstName", ">=", search)))
+        const usersData = await getDocs(query<User>(userColRef, where("firstName", "==", search)))
+       
         if (!usersData.empty) {
             setSearching(true)
             // get doc for that user    
             const userData = usersData.docs[0]
+            
             const data = await getDoc<UserDoc>(createDoc<UserDoc>(Collections.USER_DOC, userData.id))
             const docData = data.data()
+            
             const info = {
                 id: userData.id,
                 firstName: userData.data().firstName,
@@ -158,13 +170,15 @@ export default function Subscription() {
                 mobileNumber: userData.data().mobileNumber,
                 doc: docData,
             } as iUserInfo
+            
             setApprovedList([info])
+         
+            
         } else {
             toast("No Data Available")
         }
+    //}
     }
-    }
-
 
     return (
         <Main title='Accounts'>
@@ -174,8 +188,16 @@ export default function Subscription() {
                         <Title text='Subscription' />
                         <div className='flex justify-end items-center gap-2'>
                             <input
-                                onKeyUp={doSearch}
-                                value={search} onChange={(e) => { setSearch(e.target.value) }} type="text" className='px-5 py-1 border border-gray-400 rounded-full' placeholder='Search' />
+                                //onKeyUp={doSearch}
+                                onKeyUp={(e) => {
+                                    e.preventDefault();
+                                    if (e.key === "Enter") {
+                                      doSearch();
+                                    }
+                                  }}
+                                  value={search}
+                                  onChange={(e) => setSearch(e.target.value.trim())}
+                               type="text" className='px-5 py-1 border border-gray-400 rounded-full' placeholder='Search' />
                             {searching && <BsFillBackspaceFill className='text-3xl cursor-pointer' onClick={() => {
                                 setSearch("")
                                 setSearching(false)
@@ -186,7 +208,7 @@ export default function Subscription() {
                     <Spacing />
                     <Spacing />
                     <Spacing />
-                    <SubscriptionList searching={searching} pendingList={pendingList} reviewedList={approvedList} setInfo={setInfo} />
+                    <SubscriptionList searching={searching} pendingList={pendingList} reviewedList={approvedList} setInfo={setInfo} searchWord={search}/>
 
 
                     {searching == false && lastID !== undefined &&
