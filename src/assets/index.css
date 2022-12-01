@@ -44,6 +44,11 @@ font-size: 20px;
     text-align: center;
     font-size: 14px;
 }
+
+.circleDataMain{
+  text-align: -webkit-center;
+}
+
 .circleDataMain button{
 background: #36A2DA;
 border: 0.522727px solid rgba(0, 0, 0, 0.2);
@@ -56,7 +61,7 @@ font-weight: 700;
 font-size: 9.40909px;
 line-height: 11px;
 color: #FFFFFF;
-margin-left: 55px;
+/* margin-left: 55px; */
 }
 
 .circleDataMain button:hover{
@@ -88,6 +93,11 @@ font-style: normal;
 font-weight: 600;
 font-size: 16px;
 line-height: 19px;
+}
+
+.tableData{
+  table-layout: fixed;
+  width: 100%;
 }
 
 .tableData tr {

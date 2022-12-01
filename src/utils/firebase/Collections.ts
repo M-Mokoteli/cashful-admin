@@ -5,4 +5,5 @@ export enum Collections {
     LEVEL = "levels",
     PAYMENT_INFO = "payment_infos",
     BACK_INFO = "background_informations",
+    AUTHORIZATION_CODES = "authorization_codes",
 }

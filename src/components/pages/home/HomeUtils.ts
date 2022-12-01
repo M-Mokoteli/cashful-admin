@@ -14,7 +14,7 @@ export const initLoadData = async (
     const lrColRef = createCollection<LoanRequest>(Collections.LOAN_REQUEST)
     const lrQuery = query<LoanRequest>(lrColRef, ...queryConstraints, orderBy("loanDate", "desc"), limit(Define.PAGE_SIZE))
     const data = await getDocs<LoanRequest>(lrQuery)
-    //console.log("------", data.docs);
+    // console.log("------", data);
     if (!data.empty) {
         setPage(1)
         populateData(data)
@@ -140,5 +140,25 @@ export const onUpdateLevel = async (uid: string, levelId: string) => {
         const lrDocRef = createDoc<User>(Collections.USER, uid)
         await updateDoc(lrDocRef, { "levelId": levelId })
         window.location.reload()
+    }
+}
+
+export const onLoadAuthorizationCodes = async (
+    userId: string,
+    setPage: React.Dispatch<React.SetStateAction<number>>,
+    ...queryConstraints: QueryConstraint[]
+) => {
+    console.log(userId);
+    // console.log(queryConstraints);
+    const lrColRef = createDoc<any>(Collections.AUTHORIZATION_CODES, userId)
+    // // const lrQuery = query<any>(lrColRef, ...queryConstraints)
+    // const lrQuery = query<any>(lrColRef)
+    const authData = await getDoc(lrColRef)
+    // const data = await getDocs<any>(lrColRef)
+    console.log("---autho---", authData.data());
+    if (!authData.exists) {
+        return authData.data()
+    } else {
+        toast("Card is not linked")
     }
 }
