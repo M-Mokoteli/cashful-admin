@@ -1,9 +1,9 @@
-import { query, where, orderBy, limit, getDocs, QuerySnapshot, WhereFilterOp, startAfter, endBefore, limitToLast, QueryConstraint, updateDoc, getDoc, doc } from "firebase/firestore"
+import { query, where, orderBy, limit, getDocs, QuerySnapshot, WhereFilterOp, startAfter, endBefore, limitToLast, QueryConstraint, updateDoc, getDoc, doc, addDoc } from "firebase/firestore"
 import React from "react"
 import { toast } from "react-toastify"
 import Define from "../../../utils/Define"
 import { Collections } from "../../../utils/firebase/Collections"
-import { createCollection, createDoc } from "../../../utils/firebase/config"
+import { createCollection, createDoc, updateChildDoc } from "../../../utils/firebase/config"
 import { Level, LoanRequest, STATUS, User } from "../../../utils/interface/Models"
 
 export const initLoadData = async (
@@ -145,20 +145,69 @@ export const onUpdateLevel = async (uid: string, levelId: string) => {
 
 export const onLoadAuthorizationCodes = async (
     userId: string,
+    docId: string,
     setPage: React.Dispatch<React.SetStateAction<number>>,
     ...queryConstraints: QueryConstraint[]
 ) => {
-    console.log(userId);
     // console.log(queryConstraints);
     const lrColRef = createDoc<any>(Collections.AUTHORIZATION_CODES, userId)
-    // // const lrQuery = query<any>(lrColRef, ...queryConstraints)
     // const lrQuery = query<any>(lrColRef)
     const authData = await getDoc(lrColRef)
     // const data = await getDocs<any>(lrColRef)
-    console.log("---autho---", authData.data());
-    if (!authData.exists) {
+    if (authData.exists()) {
+        console.log("---autho---", authData.data().amount);
         return authData.data()
     } else {
         toast("Card is not linked")
     }
+}
+
+export const getRepayments = async (
+    docId: string,
+) => {
+    const lrColRef = createCollection<any>(Collections.LOAN_REQUEST+"/"+docId+"/repayments")
+    const lrQuery = query<any>(lrColRef, orderBy('repayment', "asc"))
+    // const lrQuery = query<any>(lrColRef)
+    const repayments = await getDocs(lrQuery)
+    // const data = await getDocs<any>(lrColRef)
+    if (repayments.size>0) {
+        console.log("Repayments-------", repayments.docs);
+        var arr = []
+        
+        for (let i = 0; i < repayments.docs.length; i++) {
+            repayments.docs[i].data()["repaymentId"] = repayments.docs[i].id
+            var newInput = Object.assign(repayments.docs[i].data(), {["repaymentId"] : repayments.docs[i].id})
+            // console.log(newInput)
+            arr.push(newInput)
+            // console.log("Document Id: ", repayments.docs[i].id)
+        }
+        
+        return arr
+    } else {
+        toast("0 Repayments")
+        return []
+        
+    }
+}
+
+export const updateRepayments = async (
+    docId: string,
+    repaymentId: string,
+    isInstallment: boolean,
+    reference: string,
+) => {
+
+    var date = new Date()
+    
+    if(isInstallment){
+
+        const lrDocRef = updateChildDoc<any>(Collections.LOAN_REQUEST+"/"+docId+"/repayments", repaymentId)
+        await updateDoc(lrDocRef, { "status": "paid", "paidDate" : date.toISOString(), "reference": reference })
+    }else{
+        const lrDocRef = createDoc<any>(Collections.LOAN_REQUEST, docId)
+        await updateDoc(lrDocRef, { "paymentStatus": "paid", "paidDate" : date.toISOString(), "reference": reference })
+    }
+
+
+    window.location.reload()
 }

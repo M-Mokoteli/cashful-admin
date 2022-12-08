@@ -23,6 +23,10 @@ export const createDoc = <T = DocumentData>(collectionName: Collections, id: str
     return doc(DB, collectionName, id) as DocumentReference<T>
 }
 
+export const updateChildDoc = <T = DocumentData>(collectionName: string, id: string) => {
+    return doc(DB, collectionName, id) as DocumentReference<T>
+}
+
 export const createCollection = <T = DocumentData>(collectionName: string): CollectionReference<T> => {
     return collection(DB, collectionName) as CollectionReference<T>
 }

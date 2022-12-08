@@ -14,12 +14,15 @@ import {
   paginateNext,
   paginatePrev,
   URHpopulateData,
+  getRepayments,
+  updateRepayments,
 } from '../home/HomeUtils';
-import { QuerySnapshot, where } from 'firebase/firestore';
+import { QuerySnapshot, Timestamp, where } from 'firebase/firestore';
 import Define from '../../../utils/Define';
 import MySelect from '../../layout/form/MySelect';
 import FbPaginate from '../../layout/common/FbPaginate';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 interface iAccountList {
   searching: boolean;
@@ -52,27 +55,59 @@ export default function SubscriptionList({
   const [showDetails, setShowDetails] = useState(false);
   const [item, setItem] = useState(null as any);
   const [authCodes, setAuthCodes] = useState(null as any);
+  const [repayments, setRepayments] = useState(null as any);
+  const [nextInstallmentDate, setNextInstallmentDate] = useState(null as any);
+  const [nextInstallment, setInstallment] = useState(null as any);
+  const [isPaidInstallments, setIsPaidInstallments] = useState(null as any);
 
   const onDetailsClick = (item: any) => {
     console.log(item);
     setItem(item);
     setShowDetails(true);
-    const authCodes=onLoadAuthorizationCodes(item.userId, setPage,where('Document ID', '==', item.userId))
+    const repayments=getRepayments(item.id)
+    repayments.then((res)=>{
+      setRepayments(res)
+      
+    })
+    const authCodes=onLoadAuthorizationCodes(item.userId, item.id, setPage,where('Document ID', '==', item.userId))
     authCodes.then((res)=>{
       setAuthCodes(res)
     })
   };
 
   useEffect(() => {
-    console.log(authCodes)
-  }, [authCodes]);
+    console.log("Repayments",repayments)
+    console.log("Auth codes",authCodes)
+    if(repayments){
+      for(var i=0;i <repayments?.length;i++){
+        if(repayments[i].status==="upcoming"){
+          console.log("Setting next installment")
+          setIsPaidInstallments(repayments[i]?.status.toString())
+          setNextInstallmentDate(repayments[i]?.dueDate.toDate().toDateString())
+          setInstallment(parseFloat(repayments[i]?.amount.toString()).toFixed(0))
+          break
+        }
+      }
+      if(repayments.length===0){
+        
+        setIsPaidInstallments(item.paymentStatus.toString())
+        setNextInstallmentDate(addDays(new Date(item.loanDate), parseInt(item.paymentTime.toString())).toISOString().split('T')[0])
+        setInstallment(parseFloat(item.totalRepayable.toString()).toFixed(0))
+      }
+    }
+  }, [authCodes, repayments]);
+
+  function addDays(date : any, number : any) {
+    const newDate = new Date(date);
+    return new Date(newDate.setDate(newDate.getDate() + number));
+  }
 
   useEffect(() => {
     if (levels.length > 0)
       initLoadData(
         setPage,
         populateData,
-        where('loanStatus', '==', STATUS.pending)
+        where('loanStatus', '==', STATUS.approved)
       );
   }, [levels.length]);
 
@@ -80,13 +115,14 @@ export default function SubscriptionList({
     initLoadData(setPage, populateData, where('firstName', '==', searchWord));
   }, [reviewedList]);
 
+
   //next
   const next = async () => {
     paginateNext(
       setPage,
       populateData,
       requests,
-      where('loanStatus', '==', STATUS.pending)
+      where('loanStatus', '==', STATUS.approved)
     );
   };
   //prev
@@ -95,44 +131,77 @@ export default function SubscriptionList({
       setPage,
       populateData,
       requests,
-      where('loanStatus', '==', STATUS.pending)
+      where('loanStatus', '==', STATUS.approved)
     );
   };
 
   const populateData = async (data: QuerySnapshot<LoanRequest>) => {
+    setRepayments(null)
     URHpopulateData(data, levels, setRequests);
   };
 
   const loadPayment = async (uid:string) => {
   //  console.log( onLoadPaymentInfo(setPage));;
   };
-  const apiCall = async () => {
+  const apiCall = async (docId: string) => {
     if(authCodes){
-    const article = {
-      authorization_code: authCodes.authorization.authorization_code,
-      email:authCodes.customer.email,
-      amount: authCodes.amount,
-      currency: 'ZAR',
-    };
-    axios
-      .post(
-        'https://api.paystack.co/transaction/charge_authorization',
-        article,
-        { headers: { Authorization: `Bearer sk_test_f2eb250bf2baba6606992b64ed0fb0a61fe48655` } }
-      )
-      .then((response) => {
-        console.log('object');
-      });
+      if(isPaidInstallments==="paid"){
+        toast("Already paid")
+      }else{
+        const yes = confirm("Are you sure you want to charge card?")
+        if(yes===true){
+          const article = {
+            authorization_code: authCodes.authorization.authorization_code,
+            email:authCodes.customer.email,
+            amount: parseInt(nextInstallment) * 100,
+            currency: 'ZAR',
+          };
+          axios
+            .post(
+              'https://api.paystack.co/transaction/charge_authorization',
+              article,
+              { headers: { Authorization: `Bearer sk_live_ad543dd59a6282b947f04ae2910723fefa1a3d30` } }
+            )
+            .then(async (response) => {
+              console.log('=======Charge Card Response======', response.data.data.status);
+              if(repayments){
+                if(repayments.length>0){
+                  for(var i=0; i<repayments.length;i++){
+                    if(repayments[i].status==="upcoming"){
+                      await updateRepayments(docId, repayments[i].repaymentId, true, response.data.data.reference.toString())
+                      break
+                    }
+                  }
+                }else{
+                  await updateRepayments(docId, '', false, response.data.data.reference.toString())
+                }
+              }
+              
+            });
+        }
+      }
     }
   };
+
+  
+function onChangeInstallment(value: string) {
+  const re = /^[0-9\b]+$/;
+  if (value === '' || re.test(value)) {
+    if(parseInt(value) <= parseInt(item.totalRepayable.toString())){
+      setInstallment(value)
+    }
+ }
+}
+  
   return (
+    
     <MyCard>
       <div className='Subsmain'>
         <Title text='Search Result' isSubtitle />
         <Spacing />
         <Table
           noShadow={true}
-          header='Load Date,First Name,Last Name,Term,Account,Intrest,Total Repayble, Action'
+          header='Loan Date,First Name,Last Name,Term,Account,Intrest,Total Repayble, Action'
           items={[
             ...requests.map((item, i) => {
               // console.log(item);
@@ -173,7 +242,7 @@ export default function SubscriptionList({
       <Spacing />
       <div className='modeName'>
         <Modal
-          title={item?.firstName + '' + item?.lastName}
+          title={item?.firstName + ' ' + item?.lastName}
           onClose={() => {
             setShowContent(false);
           }}
@@ -181,67 +250,137 @@ export default function SubscriptionList({
           setShow={setShowDetails}
           footer={
             <>
-              <Button onClick={() => apiCall()} title='Charge card' />
+              <Button onClick={() => apiCall(item.id)} title='Charge card' />
             </>
           }
         >
           <>
-            <div className='closebtn' onClick={() => setShowDetails(false)}>
+            <div className='closebtn closeBtn2' onClick={() => setShowDetails(false)}>
               x
             </div>
             <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
               <div className='col-span-1 p-4 border rounded-md circleDataMain'>
-                <p className='paraM'>Loan Date</p>
-                <h5 className='headingData'>{item?.loanDate.split(' ')[0]}</h5>
-                <h6 className='fontSizes'> Outstanding Amount</h6>
-                <div className='flex items-center justify-between gap-2 circleData'>
+                <p className='paraM'>Loan Details</p>
+                <p className='paraM'>Date: {item?.loanDate.split(' ')[0]}</p>
+                <p className='paraM'>Outstanding Amount: {item?.totalRepayable}</p>
+                <p className='paraM'>Status: {item?.paymentStatus}</p>
+                <p className='paraM'>Remaining Balance: {item?.balanceRemaining.length == 0 ? item?.totalRepayable:item?.balanceRemaining }</p>
+                {/* <div className='flex items-center justify-between gap-2 circleData'>
                   <input value={item?.totalRepayable} />
-                </div>
-                <Button onClick={() => setShowDetails(false)} title='Submit' />
+                </div> */}
+                {/* <Button onClick={() => setShowDetails(false)} title='Submit' /> */}
               </div>
               <div className='col-span-1 p-4 border rounded-md'>
+              
                 <h6 className='fontSizes'>Next Instalment</h6>
                 <div className='flex items-center justify-between gap-2 circleDataTwo'>
-                  {item?.loanAmount}
+                  {nextInstallment}
                 </div>
                 <p className='paraM'>Next Instalment Date</p>
-                <h5 className='headingData'>{item?.loanDate.split(' ')[0]}</h5>
+                <h5 className='headingData'>{nextInstallmentDate}</h5>
               </div>
               <div className='col-span-1 p-4 border rounded-md'>
                 <p className='paraM paraMs'>
                   status: {item?.loanStatus}
                   <br></br>
-                  message: Bin resolved<br></br>
-                  bin: 539983<br></br>
-                  brand: Mastercard<br></br>
-                  sub brand: <br></br>
-                  country code: NG<br></br>
-                  country name: Nigeria<br></br>
-                  card type: DEBIT<br></br>
-                  bank: Guaranty Trust Bank<br></br>
-                  linked bank id: 9
+                  Message: Bin resolved<br></br>
+                  Bin: 539983<br></br>
+                  Brand: Mastercard<br></br>
+                  Sub Brand: <br></br>
+                  Country Code: NG<br></br>
+                  Country Name: Nigeria<br></br>
+                  Card Type: DEBIT<br></br>
+                  Bank: Guaranty Trust Bank<br></br>
+                  Linked Bank id: 9
                 </p>
               </div>
             </div>
             <div className='grid grid-cols-1 gap-4 md:grid-cols-1 fullwidt'>
               <div className='col-span-1 border rounded-md'>
                 <h5 className='headingData'>Repayment Schedule</h5>
-                <table width='100%' className='tableData'>
-                  <tr>
-                    <th>Due Date</th>
-                    <th>Amount Due</th>
-                    <th>Status</th>
-                  </tr>
-                  <tr>
-                    <td>{item?.loanDate.split(' ')[0]}</td>
-                    <td>{item?.loanAmount}</td>
-                    <td>{item?.loanStatus}</td>
-                  </tr>
+                
+                {(repayments!==null && repayments.length>0) && <Table
+                  noShadow={true}
+                  header='Repayment,Due Date,Amount,Status,Paid Date'
+                  items={[
+                    ...repayments.map((rep: { repayment: string, dueDate: any, amount: string, status: string, paidDate: any}, i: any) => {
+                      // console.log(repayments);
+                      if(rep?.status==="upcoming"){
+                        return {
+                          repayment: rep?.repayment.toString(),
+                          dueDate: rep?.dueDate.toDate().toDateString(),
+                          amount: parseFloat(rep?.amount.toString()).toFixed(2).toString(),
+                          status: rep?.status.toString(),
+                          // paidDate: {rep?.paidDate},
+                        };
+                      } else{
+                        return {
+                          repayment: rep?.repayment.toString(),
+                          dueDate: rep?.dueDate.toDate().toDateString(),
+                          amount: parseFloat(rep?.amount.toString()).toFixed(2).toString(),
+                          status: rep?.status.toString(),
+                          paidDate: rep?.paidDate.toString().split("T")[0],
+                        };
+                      }
+                    }),
+                  ]}
+                  hideOption={true}
+                />}
+
+                {(repayments!==null && repayments.length===0) && 
+
+                <table className='tableData'>
+                  <thead>
+                    <tr>
+                      <th>Repayment</th>
+                      <th>Due Date</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Paid Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>{item.repayment}</td>
+                      <td>{nextInstallmentDate}</td>
+                      <td>{item.totalRepayable}</td>
+                      <td>{item.paymentStatus}</td>
+                      <td>{item.paidDate && item.paidDate.toString().split("T")[0]}</td>
+                    </tr>
+                    </tbody>
                 </table>
+                // <Table
+                //   noShadow={true}
+                //   header='Repayment,Due Date,Amount,Status,Paid Date'
+                //   items={[
+                //     ...repayments.map((rep: { repayment: string, dueDate: any, amount: string, status: string, paidDate: any}, i: any) => {
+                //       // console.log(repayments);
+                //       if(rep?.status==="upcoming"){
+                //         return {
+                //           repayment: rep?.repayment.toString(),
+                //           dueDate: rep?.dueDate.toDate().toDateString(),
+                //           amount: parseFloat(rep?.amount.toString()).toFixed(2).toString(),
+                //           status: rep?.status.toString(),
+                //           // paidDate: {rep?.paidDate},
+                //         };
+                //       } else{
+                //         return {
+                //           repayment: rep?.repayment.toString(),
+                //           dueDate: rep?.dueDate.toDate().toDateString(),
+                //           amount: parseFloat(rep?.amount.toString()).toFixed(2).toString(),
+                //           status: rep?.status.toString(),
+                //           paidDate: rep?.paidDate.toString(),
+                //         };
+                //       }
+                //     }),
+                //   ]}
+                //   hideOption={true}
+                // />
+                }
               </div>
 
               <div className='flex items-center justify-between gap-2 circleData bottomInput'>
-                <input value='RS 400.00' />
+                <input value={nextInstallment} onChange={val => onChangeInstallment(val.target.value)} type="number" />
               </div>
             </div>
           </>
@@ -250,3 +389,6 @@ export default function SubscriptionList({
     </MyCard>
   );
 }
+
+
+
